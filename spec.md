@@ -6,7 +6,7 @@
 |---|---|---|
 | Dư Văn Hùng | 2A202603975 |  |
 | Quách Ngọc Huy | 2A202603956 |  |
-|  |  |  |
+| Vũ Đình Huy | 2A202603985 |  |
 |  |  |  |
 
 > Ghi cụ thể việc mỗi người làm — khi demo, ai cũng có thể bị hỏi về phần có tên mình.
