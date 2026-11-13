@@ -6,7 +6,7 @@
 |---|---|---|
 | Dư Văn Hùng | 2A202603975 |  |
 | Quách Ngọc Huy | 2A202603956 |  |
-| Vũ Đình Huy | 2A202603985 |  |
+| Vũ Đình Huy | 2A202603985 | Dựng 1–2 màn hình HTML cho K3, mô phỏng quy trình hỏi lại → xác nhận → hoàn tác trong 2 phút → thông báo đổi nhầm; nếu kịp, bổ sung màn hình xác nhận hoàn vé K5. |
 |  |  |  |
 
 > Ghi cụ thể việc mỗi người làm — khi demo, ai cũng có thể bị hỏi về phần có tên mình.
