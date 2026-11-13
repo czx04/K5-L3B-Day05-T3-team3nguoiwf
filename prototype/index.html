@@ -44,9 +44,10 @@
     <!-- MODAL K5: XÁC NHẬN HOÀN VÉ -->
     <div id="refund-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white p-6 rounded-2xl max-w-[360px] w-full mx-4 shadow-xl">
+            <p class="text-[11px] uppercase tracking-wide text-gray-500 mb-1"><span class="n">5</span>Màn xác nhận của app · AI không bấm được nút này</p>
             <h3 class="font-bold text-red-600 text-lg mb-2">Xác nhận hoàn vé</h3>
             <p class="text-sm text-gray-700 mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
-                <span class="n">1</span> Yêu cầu gửi đi <b>không thể huỷ</b>. Bạn sẽ mất chỗ thay thế. Tiền về thẻ trong tối đa 90 ngày. Huỷ do bão <b>không bồi thường tiền mặt</b>.
+                <span class="n">3</span> Yêu cầu gửi đi <b>không thể huỷ</b>. Bạn sẽ mất chỗ thay thế. Tiền về thẻ trong tối đa 90 ngày. Huỷ do bão <b>không bồi thường tiền mặt</b>.
             </p>
             
             <div class="mb-4">
@@ -68,13 +69,42 @@
 
             <div class="flex flex-col gap-2">
                 <button id="btn-submit-refund" disabled class="w-full bg-red-600 text-white font-bold py-2 rounded-lg opacity-50 cursor-not-allowed">Gửi yêu cầu hoàn vé</button>
-                <button onclick="closeRefundModal()" class="w-full bg-gray-200 text-gray-800 font-bold py-2 rounded-lg hover:bg-gray-300">Quay lại, đổi chuyến</button>
+                <button onclick="closeRefundModal(); loadScenario('K3')" class="w-full bg-gray-200 text-gray-800 font-bold py-2 rounded-lg hover:bg-gray-300">Quay lại, đổi chuyến</button>
             </div>
         </div>
     </div>
 
     <script>
-        let countdown;
+        let countdown, holdInterval, holdLeft = 1200, scenario = 'K3';
+        const fmt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+        function aiMsg(html) {
+            const d = document.createElement('div');
+            d.className = 'flex flex-col mb-4 fade-in';
+            d.innerHTML = `<span class="text-xs text-gray-500 mb-1 ml-1 font-semibold">✨ Trợ lý đặt chỗ (AI)</span><div class="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[95%] text-sm text-gray-800">${html}</div>`;
+            chatContainer.appendChild(d);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        function startHold() {
+            clearInterval(holdInterval); holdLeft = 1200;
+            holdInterval = setInterval(() => {
+                holdLeft--;
+                const el = document.getElementById('hold-timer'); if (el) el.innerText = fmt(holdLeft);
+                if (holdLeft === 300) document.getElementById('hold-notice').innerHTML = '<p class="text-center text-xs bg-yellow-100 text-yellow-800 rounded-full py-1 px-3 my-2">🔔 Chỗ giữ trên BM 201 hết sau 5 phút</p>';
+                if (holdLeft <= 0) { clearInterval(holdInterval); if (el) el.innerText = 'đã nhả';
+                    aiMsg('Chỗ giữ đã hết 20 phút và đã <b>tự nhả</b>. Mình <b>chưa đổi gì</b>: vé gốc và lần đổi miễn phí vẫn còn nguyên.'); }
+            }, 1000);
+        }
+        function notYet() {
+            aiMsg(`Được, mình <b>chưa đổi gì</b>. Chỗ trên BM 201 vẫn giữ thêm ${fmt(holdLeft)}; mình sẽ nhắc trước 5 phút. Hết giờ chỗ tự nhả, mình không bao giờ tự đổi vé.`);
+        }
+        function toStaff(reason) {
+            aiMsg(`Mình đã chuyển bạn tới <b>nhân viên hỗ trợ (ưu tiên)</b>, thời gian chờ khoảng 5 phút. Bạn không phải kể lại.
+                <div class="mt-2 border border-dashed border-blue-400 rounded-lg p-2 text-xs text-gray-700"><b>Nhân viên thấy:</b> TRV-7Q2K · BM 213 huỷ do bão · 2 hành khách (An 34t, Bình 5t) · lý do chuyển: ${reason} · toàn bộ đoạn chat.</div>`);
+        }
+        function reportWrong() {
+            aiMsg('Mình rất tiếc vì chuyến mới chưa đúng ý bạn. Vé đã gửi sang hãng nên mình <b>không tự đổi lại được</b>: đổi lần nữa có thể mất phí.');
+            toStaff('Báo đổi nhầm, vừa đổi chuyến (lần đổi miễn phí đã dùng)');
+        }
 
         const chatContainer = document.getElementById('chat-container');
 
@@ -92,7 +122,7 @@
                     <p class="text-[11px] text-gray-500 mb-3">Dựa vào: TRV-7Q2K · số chỗ lúc 15:02 · đổi miễn phí 1 lần trong 48 giờ.</p>
                     <div class="flex flex-col gap-2">
                         <div onclick="showConfirmation('BM 201', '07:00 sáng, 13/11')" class="border-2 border-blue-500 rounded-lg p-3 cursor-pointer hover:bg-blue-50 relative">
-                            <div class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Đang giữ ⏱ 19:59</div>
+                            <div class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Đang giữ · CHƯA đổi vé ⏱ <span id="hold-timer">20:00</span></div>
                             <div class="font-bold text-blue-700">BM 201 <span class="font-normal text-sm text-gray-600">· 07:00 (13/11)</span></div>
                         </div>
                         <div onclick="showConfirmation('BM 205', '09:30 sáng, 13/11')" class="border border-gray-300 rounded-lg p-3 cursor-pointer hover:bg-gray-100">
@@ -103,8 +133,13 @@
                             <div class="text-xs text-red-500 font-bold mt-1">🔒 Chỉ còn 1 chỗ, không đủ 2 người</div>
                         </div>
                     </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="notYet()" class="flex-1 bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400 text-sm">Chưa đổi, để mình nghĩ</button>
+                        <button onclick="toStaff('Khách muốn gặp người')" class="flex-1 bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400 text-sm">Gặp nhân viên</button>
+                    </div>
                 </div>
             </div>
+            <div id="hold-notice"></div>
             <!-- Chỗ chứa Card xác nhận (Ẩn) -->
             <div id="k3-interactive-area"></div>
         `;
@@ -114,7 +149,7 @@
                 <div class="bg-gray-200 text-gray-900 p-3 rounded-2xl rounded-tr-none max-w-[80%]">Thôi huỷ hết đi, hoàn tiền cho mình.</div>
             </div>
             <div class="flex flex-col mb-4 fade-in">
-                <span class="text-xs text-gray-500 mb-1 ml-1 font-semibold">✨ Trợ lý đặt chỗ (AI)</span>
+                <span class="text-xs text-gray-500 mb-1 ml-1 font-semibold"><span class="n">5</span>✨ Trợ lý đặt chỗ (AI)</span>
                 <div class="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[95%]">
                     <p class="text-sm text-gray-800 mb-2">Trước khi hoàn vé, bạn cần biết 3 điều:</p>
                     <ul class="text-sm text-gray-800 mb-3 list-decimal pl-4 space-y-1">
@@ -122,11 +157,14 @@
                         <li>Tiền về thẻ đã thanh toán, mất tới 90 ngày.</li>
                         <li>Huỷ do bão <strong>không có bồi thường tiền mặt</strong>.</li>
                     </ul>
-                    <p class="text-sm text-gray-800 mb-3">Bạn vẫn có thể đổi miễn phí sang BM 201 sáng mai (còn 9 chỗ).</p>
+                    <p class="text-sm text-gray-800 mb-2">Bạn vẫn có thể đổi miễn phí sang BM 201 sáng mai (còn 9 chỗ).</p>
+                    <p class="text-sm text-gray-800 mb-2"><span class="n">5</span><strong>Mình không tự gửi yêu cầu hoàn thay bạn.</strong> Nếu vẫn muốn hoàn, bấm "Xem yêu cầu hoàn vé" để tự kiểm tra và gửi.</p>
+                    <p class="text-[11px] text-gray-500 mb-3">Dựa vào: chính sách Bay Mẫu — chuyến bị huỷ: đổi miễn phí 1 lần trong 48 giờ hoặc hoàn toàn bộ; huỷ do thời tiết: không bồi thường tiền mặt.</p>
                     <div class="flex flex-col gap-2 mt-2">
-                        <button onclick="openRefundModal()" class="w-full bg-red-100 text-red-700 font-bold py-2 rounded-lg border border-red-300"><span class="n">3</span> Xem yêu cầu hoàn vé</button>
-                        <button onclick="loadScenario('K3')" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded-lg border border-blue-300">Đổi sang BM 201 (miễn phí)</button>
-                        <button class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-300">Xem các chuyến khác</button>
+                        <button onclick="openRefundModal()" class="w-full bg-red-100 text-red-700 font-bold py-2 rounded-lg border border-red-300">Xem yêu cầu hoàn vé</button>
+                        <button onclick="loadScenario('K3'); showConfirmation('BM 201', '07:00 sáng, 13/11')" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded-lg border border-blue-300">Đổi sang BM 201 (miễn phí)</button>
+                        <button onclick="loadScenario('K3')" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-300">Xem các chuyến khác</button>
+                        <button onclick="toStaff('Khách muốn gặp người')" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-300">Gặp nhân viên</button>
                     </div>
                 </div>
             </div>
@@ -136,8 +174,9 @@
         loadScenario('K3');
 
         function loadScenario(type) {
-            clearInterval(countdown);
+            clearInterval(countdown); clearInterval(holdInterval); scenario = type;
             chatContainer.innerHTML = type === 'K3' ? k3Content : k5Content;
+            if (type === 'K3') startHold();
         }
 
         // --- Logic cho K3 ---
@@ -175,12 +214,12 @@
                 document.getElementById('timer').innerText = `0${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
                 
                 if (timeLeft <= 0) {
-                    clearInterval(countdown);
+                    clearInterval(countdown); clearInterval(holdInterval);
                     // BỔ SUNG QUAN TRỌNG: Hiện nút "Báo đổi nhầm" khi hết giờ
                     area.innerHTML = `
                         <div class="bg-gray-100 border border-gray-300 p-4 rounded-2xl mb-4 fade-in text-center">
-                            <p class="font-bold text-gray-800 mb-3">✅ Vé điện tử đã xuất thành công.</p>
-                            <button onclick="alert('Đã chuyển nhân viên ưu tiên (mô phỏng).')" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400">Báo đổi nhầm · Gặp nhân viên ưu tiên</button>
+                            <p class="font-bold text-gray-800 mb-3">✅ Đã đổi chuyến cho 2 hành khách. Vé mới về email trong khoảng 60 phút. Lần đổi miễn phí đã dùng.</p>
+                            <button onclick="reportWrong()" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400">Báo đổi nhầm · Gặp nhân viên ưu tiên</button>
                         </div>
                     `;
                 }
@@ -190,7 +229,7 @@
 
         function cancelUndo() {
             clearInterval(countdown);
-            document.getElementById('k3-interactive-area').innerHTML = `<p class="text-center text-sm text-gray-500 my-2 italic">Đã hoàn tác, vé chưa bị đổi.</p>`;
+            document.getElementById('k3-interactive-area').innerHTML = `<p class="text-center text-sm text-gray-600 my-2 italic">Đã hoàn tác: vé chưa đổi, lần đổi miễn phí còn nguyên. Chỗ trên BM 201 vẫn đang giữ, bạn chọn lại nhé.</p>`;
         }
 
         // --- Logic cho K5 ---
@@ -206,8 +245,9 @@
             }
         }
         document.getElementById('btn-submit-refund').onclick = function() {
+            const names = Array.from(document.querySelectorAll('.refund-passenger')).filter(i => i.checked).map(i => i.parentElement.textContent.trim());
             closeRefundModal();
-            alert("Đã gửi yêu cầu hoàn vé! (Mô phỏng)");
+            aiMsg(`Bạn đã tự gửi yêu cầu hoàn vé cho <b>${names.join(', ')}</b>. Mã yêu cầu: <b>HT-55821</b>. Email xác nhận đã gửi. Tiền về thẻ đã thanh toán, có thể mất tới 90 ngày.`);
         }
     </script>
 </body>

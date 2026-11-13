@@ -7,6 +7,6 @@ Mở `index.html` trực tiếp trong trình duyệt và chọn **Demo K3** ho�
 ## Ảnh chú thích
 
 - `screenshots/k3-flow.svg` — luồng hỏi lại, giữ chỗ, thẻ xác nhận và cửa sổ hoàn tác; số 1, 2, 4 tương ứng G2/G10/G11/G9.
-- `screenshots/k5-refund.svg` — cảnh báo và màn xác nhận hoàn vé; số 3 tương ứng G2/G10.
+- `screenshots/k5-refund.svg` — cảnh báo và màn xác nhận hoàn vé; số 3 tương ứng G11 + PAIR Errors/Graceful Failure, số 5 tương ứng G1.
 
 Các hình là ảnh minh họa chú thích để đối chiếu với prototype khi demo; trạng thái thật trong trang có thể bấm tương tác.
