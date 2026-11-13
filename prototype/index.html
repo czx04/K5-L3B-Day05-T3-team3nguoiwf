@@ -75,7 +75,15 @@
     </div>
 
     <script>
-        let countdown, holdInterval, holdLeft = 1200, scenario = 'K3';
+        let countdown, holdInterval, holdLeft = 1200, scenario = 'K3', k3State = 'choose', heldFlight = 'BM 201', refundSent = false;
+        function lockChoices(on, note) {
+            const c = document.getElementById('k3-choices'), n = document.getElementById('k3-lock-note');
+            if (!c) return;
+            c.style.pointerEvents = on ? 'none' : '';
+            c.style.opacity = on ? '0.45' : '';
+            c.querySelectorAll('button').forEach(b => b.disabled = on);
+            if (n) { n.textContent = note || ''; n.classList.toggle('hidden', !on); }
+        }
         const fmt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
         function aiMsg(html) {
             const d = document.createElement('div');
@@ -87,15 +95,43 @@
         function startHold() {
             clearInterval(holdInterval); holdLeft = 1200;
             holdInterval = setInterval(() => {
+                if (k3State === 'pending' || k3State === 'done') return;
                 holdLeft--;
                 const el = document.getElementById('hold-timer'); if (el) el.innerText = fmt(holdLeft);
-                if (holdLeft === 300) document.getElementById('hold-notice').innerHTML = '<p class="text-center text-xs bg-yellow-100 text-yellow-800 rounded-full py-1 px-3 my-2">🔔 Chỗ giữ trên BM 201 hết sau 5 phút</p>';
-                if (holdLeft <= 0) { clearInterval(holdInterval); if (el) el.innerText = 'đã nhả';
-                    aiMsg('Chỗ giữ đã hết 20 phút và đã <b>tự nhả</b>. Mình <b>chưa đổi gì</b>: vé gốc và lần đổi miễn phí vẫn còn nguyên.'); }
+                if (holdLeft === 300) document.getElementById('hold-notice').innerHTML = `<p class="text-center text-xs bg-yellow-100 text-yellow-800 rounded-full py-1 px-3 my-2">🔔 Chỗ giữ trên ${heldFlight} hết sau 5 phút</p>`;
+                if (holdLeft <= 0) {
+                    clearInterval(holdInterval); if (el) el.innerText = 'đã nhả';
+                    k3State = 'expired';
+                    document.getElementById('k3-interactive-area').innerHTML = '';
+                    lockChoices(true, 'Chỗ giữ đã nhả. Số chỗ có thể đã thay đổi, cần kiểm tra lại trước khi chọn.');
+                    aiMsg(`Chỗ giữ trên ${heldFlight} đã hết 20 phút và đã <b>tự nhả</b>. Mình <b>chưa đổi gì</b>: vé gốc và lần đổi miễn phí vẫn còn nguyên.
+                        <div class="mt-2"><button onclick="this.disabled=true; recheck()" class="bg-blue-600 text-white font-bold py-1 px-3 rounded-lg text-sm">Kiểm tra lại chỗ trống</button></div>`);
+                }
             }, 1000);
         }
+        function moveHold(f) {
+            const badge = document.getElementById('hold-badge');
+            const card = document.querySelector(`[data-flight="${f}"]`);
+            document.querySelectorAll('[data-flight]').forEach(c => { c.classList.remove('border-2', 'border-blue-500'); c.classList.add('border', 'border-gray-300'); });
+            if (card) { card.classList.remove('border', 'border-gray-300'); card.classList.add('border-2', 'border-blue-500'); if (badge) card.prepend(badge); }
+        }
+        function recheck() {
+            k3State = 'choose';
+            lockChoices(false);
+            document.getElementById('hold-notice').innerHTML = '';
+            startHold();
+            const el = document.getElementById('hold-timer'); if (el) el.innerText = fmt(holdLeft);
+            aiMsg(`Mình đã kiểm tra lại: ${heldFlight} vẫn còn chỗ, đã <b>giữ lại 2 chỗ trong 20 phút</b>. Vẫn <b>chưa đổi vé</b>.`);
+        }
+        function checkPax() {
+            const all = Array.from(document.querySelectorAll('.pax')).every(i => i.checked);
+            const btn = document.getElementById('btn-confirm');
+            btn.disabled = !all; btn.classList.toggle('opacity-50', !all);
+            document.getElementById('pax-warn').classList.toggle('hidden', all);
+        }
         function notYet() {
-            aiMsg(`Được, mình <b>chưa đổi gì</b>. Chỗ trên BM 201 vẫn giữ thêm ${fmt(holdLeft)}; mình sẽ nhắc trước 5 phút. Hết giờ chỗ tự nhả, mình không bao giờ tự đổi vé.`);
+            if (k3State !== 'choose') return;
+            aiMsg(`Được, mình <b>chưa đổi gì</b>. Chỗ trên ${heldFlight} vẫn giữ thêm ${fmt(holdLeft)}; mình sẽ nhắc trước 5 phút. Hết giờ chỗ tự nhả, mình không bao giờ tự đổi vé.`);
         }
         function toStaff(reason) {
             aiMsg(`Mình đã chuyển bạn tới <b>nhân viên hỗ trợ (ưu tiên)</b>, thời gian chờ khoảng 5 phút. Bạn không phải kể lại.
@@ -118,14 +154,15 @@
                     <div class="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded mb-2">
                         <span class="n">1</span> Chưa rõ bạn chọn chuyến nào
                     </div>
-                    <p class="text-sm text-gray-800 mb-2"><span class="n">2</span> Mình <strong>chưa đổi vé</strong> đâu nhé. Mình đã <strong>giữ tạm 2 chỗ trên BM 201 trong 20 phút</strong>. Bạn muốn đổi chuyến nào cho cả 2 người?</p>
+                    <p class="text-sm text-gray-800 mb-2"><span class="n">2</span> Mình <strong>chưa đổi vé</strong> đâu nhé. Mình đã <strong>giữ tạm 2 chỗ trên BM 201 trong 20 phút</strong> (chuyến sớm nhất đủ chỗ cho 2 người). Bạn muốn đổi chuyến nào cho cả 2 người?</p>
                     <p class="text-[11px] text-gray-500 mb-3">Dựa vào: TRV-7Q2K · số chỗ lúc 15:02 · đổi miễn phí 1 lần trong 48 giờ.</p>
+                    <div id="k3-choices" class="transition-opacity">
                     <div class="flex flex-col gap-2">
-                        <div onclick="showConfirmation('BM 201', '07:00 sáng, 13/11')" class="border-2 border-blue-500 rounded-lg p-3 cursor-pointer hover:bg-blue-50 relative">
-                            <div class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Đang giữ · CHƯA đổi vé ⏱ <span id="hold-timer">20:00</span></div>
+                        <div data-flight="BM 201" onclick="showConfirmation('BM 201', '07:00 sáng, 13/11')" class="border-2 border-blue-500 rounded-lg p-3 cursor-pointer hover:bg-blue-50 relative">
+                            <div id="hold-badge" class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Đang giữ · CHƯA đổi vé ⏱ <span id="hold-timer">20:00</span></div>
                             <div class="font-bold text-blue-700">BM 201 <span class="font-normal text-sm text-gray-600">· 07:00 (13/11)</span></div>
                         </div>
-                        <div onclick="showConfirmation('BM 205', '09:30 sáng, 13/11')" class="border border-gray-300 rounded-lg p-3 cursor-pointer hover:bg-gray-100">
+                        <div data-flight="BM 205" onclick="showConfirmation('BM 205', '09:30 sáng, 13/11')" class="border border-gray-300 rounded-lg p-3 cursor-pointer hover:bg-gray-100 relative">
                             <div class="font-bold text-gray-800">BM 205 <span class="font-normal text-sm text-gray-600">· 09:30 (13/11)</span></div>
                         </div>
                         <div class="border border-gray-200 rounded-lg p-3 bg-gray-50 opacity-60">
@@ -137,6 +174,8 @@
                         <button onclick="notYet()" class="flex-1 bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400 text-sm">Chưa đổi, để mình nghĩ</button>
                         <button onclick="toStaff('Khách muốn gặp người')" class="flex-1 bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400 text-sm">Gặp nhân viên</button>
                     </div>
+                    </div>
+                    <p id="k3-lock-note" class="hidden text-xs text-gray-600 mt-2 italic"></p>
                 </div>
             </div>
             <div id="hold-notice"></div>
@@ -161,9 +200,9 @@
                     <p class="text-sm text-gray-800 mb-2"><span class="n">5</span><strong>Mình không tự gửi yêu cầu hoàn thay bạn.</strong> Nếu vẫn muốn hoàn, bấm "Xem yêu cầu hoàn vé" để tự kiểm tra và gửi.</p>
                     <p class="text-[11px] text-gray-500 mb-3">Dựa vào: chính sách Bay Mẫu — chuyến bị huỷ: đổi miễn phí 1 lần trong 48 giờ hoặc hoàn toàn bộ; huỷ do thời tiết: không bồi thường tiền mặt.</p>
                     <div class="flex flex-col gap-2 mt-2">
-                        <button onclick="openRefundModal()" class="w-full bg-red-100 text-red-700 font-bold py-2 rounded-lg border border-red-300">Xem yêu cầu hoàn vé</button>
-                        <button onclick="loadScenario('K3'); showConfirmation('BM 201', '07:00 sáng, 13/11')" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded-lg border border-blue-300">Đổi sang BM 201 (miễn phí)</button>
-                        <button onclick="loadScenario('K3')" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-300">Xem các chuyến khác</button>
+                        <button data-k5 onclick="openRefundModal()" class="w-full bg-red-100 text-red-700 font-bold py-2 rounded-lg border border-red-300">Xem yêu cầu hoàn vé</button>
+                        <button data-k5 onclick="loadScenario('K3'); showConfirmation('BM 201', '07:00 sáng, 13/11')" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded-lg border border-blue-300">Đổi sang BM 201 (miễn phí)</button>
+                        <button data-k5 onclick="loadScenario('K3')" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-300">Xem các chuyến khác</button>
                         <button onclick="toStaff('Khách muốn gặp người')" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-300">Gặp nhân viên</button>
                     </div>
                 </div>
@@ -176,20 +215,33 @@
         function loadScenario(type) {
             clearInterval(countdown); clearInterval(holdInterval); scenario = type;
             chatContainer.innerHTML = type === 'K3' ? k3Content : k5Content;
+            k3State = 'choose'; heldFlight = 'BM 201'; refundSent = false;
             if (type === 'K3') startHold();
         }
 
         // --- Logic cho K3 ---
         function showConfirmation(flightName, flightTime) {
+            if (k3State !== 'choose') return;
+            if (flightName !== heldFlight) {
+                const old = heldFlight; heldFlight = flightName;
+                moveHold(flightName); startHold();
+                document.getElementById('hold-notice').innerHTML = '';
+                const el = document.getElementById('hold-timer'); if (el) el.innerText = fmt(holdLeft);
+                aiMsg(`Mình đã chuyển chỗ giữ sang <b>${flightName}</b> (chỗ trên ${old} đã nhả). Vẫn <b>chưa đổi vé</b>.`);
+            }
             const area = document.getElementById('k3-interactive-area');
             area.innerHTML = `
                 <div class="bg-blue-50 border border-blue-200 p-4 rounded-2xl mb-4 fade-in shadow-sm">
                     <h3 class="font-bold text-blue-800 mb-2">Thẻ xác nhận đổi chuyến</h3>
                     <p class="text-sm mb-2 text-gray-700">BM 213 (đã huỷ) ➔ <b class="text-blue-600">${flightName} (${flightTime})</b></p>
-                    <p class="text-sm mb-1">Hành khách: Nguyễn Minh An · Nguyễn Gia Bình (5 tuổi)</p>
+                    <p class="text-sm mb-1 font-semibold">Hành khách đổi chuyến:</p>
+                    <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="pax" checked onchange="checkPax()"> Nguyễn Minh An</label>
+                    <label class="flex items-center gap-2 text-sm mb-2"><input type="checkbox" class="pax" checked onchange="checkPax()"> Nguyễn Gia Bình (5 tuổi)</label>
+                    <div id="pax-warn" class="hidden text-xs bg-red-50 border border-red-200 text-red-700 rounded-lg p-2 mb-2">Đổi riêng từng người, hoặc để bé 5 tuổi bay không có người lớn đi cùng, cần nhân viên hỗ trợ. Mình không đổi phần này được.
+                        <button onclick="toStaff('Muốn tách hành khách / trẻ nhỏ đi một mình')" class="block mt-1 font-bold underline">Gặp nhân viên</button></div>
                     <p class="text-sm mb-3">Phí: <b>0đ</b> · Dùng lần đổi miễn phí duy nhất</p>
                     <div class="flex gap-2">
-                        <button onclick="startUndoTimer()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg">Xác nhận đổi</button>
+                        <button id="btn-confirm" onclick="startUndoTimer()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg">Xác nhận đổi</button>
                         <button onclick="document.getElementById('k3-interactive-area').innerHTML=''" class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-lg">Quay lại</button>
                     </div>
                 </div>
@@ -198,6 +250,8 @@
         }
 
         function startUndoTimer() {
+            k3State = 'pending';
+            lockChoices(true, 'Đang chờ chốt đổi vé: chỉ có thể Hoàn tác. Muốn chọn chuyến khác, bấm Hoàn tác trước.');
             const area = document.getElementById('k3-interactive-area');
             area.innerHTML = `
                 <div class="bg-white border-2 border-green-500 p-4 rounded-2xl mb-4 fade-in text-center shadow-sm">
@@ -215,11 +269,14 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(countdown); clearInterval(holdInterval);
+                    k3State = 'done';
+                    lockChoices(true, 'Vé đã đổi, lần đổi miễn phí đã dùng. Cần đổi lại: bấm Báo đổi nhầm để gặp nhân viên.');
+                    const ht = document.getElementById('hold-timer'); if (ht) ht.innerText = 'đã dùng để đổi';
                     // BỔ SUNG QUAN TRỌNG: Hiện nút "Báo đổi nhầm" khi hết giờ
                     area.innerHTML = `
                         <div class="bg-gray-100 border border-gray-300 p-4 rounded-2xl mb-4 fade-in text-center">
                             <p class="font-bold text-gray-800 mb-3">✅ Đã đổi chuyến cho 2 hành khách. Vé mới về email trong khoảng 60 phút. Lần đổi miễn phí đã dùng.</p>
-                            <button onclick="reportWrong()" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400">Báo đổi nhầm · Gặp nhân viên ưu tiên</button>
+                            <button onclick="this.disabled=true; this.classList.add('opacity-50'); reportWrong()" class="w-full bg-white text-gray-700 font-bold py-2 rounded-lg border border-gray-400">Báo đổi nhầm · Gặp nhân viên ưu tiên</button>
                         </div>
                     `;
                 }
@@ -229,11 +286,17 @@
 
         function cancelUndo() {
             clearInterval(countdown);
-            document.getElementById('k3-interactive-area').innerHTML = `<p class="text-center text-sm text-gray-600 my-2 italic">Đã hoàn tác: vé chưa đổi, lần đổi miễn phí còn nguyên. Chỗ trên BM 201 vẫn đang giữ, bạn chọn lại nhé.</p>`;
+            k3State = 'choose';
+            lockChoices(false);
+            document.getElementById('k3-interactive-area').innerHTML = `<p class="text-center text-sm text-gray-600 my-2 italic">Đã hoàn tác: vé chưa đổi, lần đổi miễn phí còn nguyên. Chỗ trên ${heldFlight} vẫn đang giữ, bạn chọn lại nhé.</p>`;
         }
 
         // --- Logic cho K5 ---
-        function openRefundModal() { document.getElementById('refund-modal').classList.remove('hidden'); document.getElementById('refund-modal').classList.add('flex'); }
+        function openRefundModal() {
+            if (refundSent) return;
+            document.querySelectorAll('.refund-passenger').forEach(i => i.checked = false);
+            document.getElementById('confirm-check').checked = false;
+            toggleRefundButton(); document.getElementById('refund-modal').classList.remove('hidden'); document.getElementById('refund-modal').classList.add('flex'); }
         function closeRefundModal() { document.getElementById('refund-modal').classList.add('hidden'); document.getElementById('refund-modal').classList.remove('flex'); }
         function toggleRefundButton() {
             const btn = document.getElementById('btn-submit-refund');
@@ -247,6 +310,8 @@
         document.getElementById('btn-submit-refund').onclick = function() {
             const names = Array.from(document.querySelectorAll('.refund-passenger')).filter(i => i.checked).map(i => i.parentElement.textContent.trim());
             closeRefundModal();
+            refundSent = true;
+            document.querySelectorAll('[data-k5]').forEach(b => { b.disabled = true; b.classList.add('opacity-40', 'cursor-not-allowed'); });
             aiMsg(`Bạn đã tự gửi yêu cầu hoàn vé cho <b>${names.join(', ')}</b>. Mã yêu cầu: <b>HT-55821</b>. Email xác nhận đã gửi. Tiền về thẻ đã thanh toán, có thể mất tới 90 ngày.`);
         }
     </script>

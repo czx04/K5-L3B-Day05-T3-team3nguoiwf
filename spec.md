@@ -288,8 +288,7 @@ Nhóm chọn **thẻ lựa chọn có căn cứ + thẻ xác nhận tường min
 
 1. **Khách tự gửi hoàn trong lúc giận** (K5): thiết kế chỉ bảo đảm khách đã đọc đủ hệ quả, không ngăn được khách cố tình tích đủ ô rồi gửi. Gửi rồi thì nhân viên cũng không rút lại được.
 2. **Đóng app trong 2 phút chờ** (K3): khách bỏ lỡ cơ hội hoàn tác; sau đó chỉ còn đường "Báo đổi nhầm" → nhân viên, và lần đổi miễn phí đã mất.
-3. **Prototype:** khi khách chọn BM 205, nhãn và tin nhắn giữ chỗ vẫn ghi BM 201.
-4. **Mới chứng minh ở giao diện:** các luật chặn (cấm AI gửi hoàn, lọc số chỗ, chặn tách trẻ nhỏ) mới thể hiện trên prototype, chưa kiểm ở tầng hệ thống/API.
+3. **Mới chứng minh ở giao diện:** các luật chặn (cấm AI gửi hoàn, lọc số chỗ, chặn tách trẻ nhỏ) mới thể hiện trên prototype, chưa kiểm ở tầng hệ thống/API.
 
 ## §7. Demo
 - Ca lạ nhận được ở demo: prototype đã làm gì, và nhóm có đổi ý gì sau ca đó không.
