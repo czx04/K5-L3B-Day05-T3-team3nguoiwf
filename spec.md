@@ -7,7 +7,7 @@
 | Dư Văn Hùng | 2A202603975 |  |
 | Quách Ngọc Huy | 2A202603956 |  |
 | Nguyễn Xuân Đạt | 2A202603958 | Thiết kế Mức tự chủ (§4): phân tích cost-of-error cho 5 tool gốc + 2 tool tách bước (`soan_yeu_cau_hoan_ve`, cửa sổ 2 phút hoàn tác `doi_chuyen_bay`), chốt tool khó xếp nhất, kiểm thử trên K3/K5/K1; phụ trách bảo vệ §1, §2 và §4 khi demo |
-|  |  |  |
+| Vũ Đình Huy | 2A202603985 |Dựng 1–2 màn hình HTML cho K3, mô phỏng quy trình hỏi lại → xác nhận → hoàn tác trong 2 phút → thông báo đổi nhầm; nếu kịp, bổ sung màn hình xác nhận hoàn vé K5.  |
 
 > Ghi cụ thể việc mỗi người làm — khi demo, ai cũng có thể bị hỏi về phần có tên mình.
 >
