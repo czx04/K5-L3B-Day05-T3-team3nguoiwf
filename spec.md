@@ -4,7 +4,7 @@
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Dư Văn Hùng | 2A202603975 |  |
+| Dư Văn Hùng | 2A202603975 | Zell · Chú thích prototype và hoàn thiện §5: công cụ, phần mock, phương án UI đã cân nhắc; rà prototype theo §3–§4 |
 | Quách Ngọc Huy | 2A202603956 |  |
 | Nguyễn Xuân Đạt | 2A202603958 | Thiết kế Mức tự chủ (§4): phân tích cost-of-error cho 5 tool gốc + 2 tool tách bước (`soan_yeu_cau_hoan_ve`, cửa sổ 2 phút hoàn tác `doi_chuyen_bay`), chốt tool khó xếp nhất, kiểm thử trên K3/K5/K1; phụ trách bảo vệ §1, §2 và §4 khi demo |
 | Vũ Đình Huy | 2A202603985 |Dựng 1–2 màn hình HTML cho K3, mô phỏng quy trình hỏi lại → xác nhận → hoàn tác trong 2 phút → thông báo đổi nhầm; nếu kịp, bổ sung màn hình xác nhận hoàn vé K5.  |
@@ -234,9 +234,31 @@ Khi nhóm quyết định **không** đặt `doi_chuyen_bay` ở mức *Tự là
 Sự thay đổi này chuyển vai trò của AI từ *"người quyết định thay dễ làm hỏng việc"* thành *"người giữ chỗ phản ứng nhanh và tấm đệm bảo vệ quyết định của khách"*.
 
 ## §5. Prototype  (chặng 5)
-- Link hoặc file · công cụ · phần nào mock · có lời gọi AI thật không.
-- 1–2 ảnh có đánh số; mỗi số: thể hiện gì · nguyên tắc HAX/PAIR nào · mức tự chủ nào.
-- Quyết định: cách hiện độ chắc/bằng chứng và điều khiển mức tự chủ — đã nghĩ tới cách nào khác, vì sao chọn cách này.
+
+**File:** [`prototype/index.html`](prototype/index.html) · mở trực tiếp trên trình duyệt; không cần cài đặt hay backend. Đây là prototype HTML/CSS/JavaScript thuần (Tailwind CSS được nạp qua CDN). **Không có lời gọi AI hoặc API hãng thật:** nội dung, ghế, trạng thái vé, bộ đếm và kết quả đổi/hoàn đều là dữ liệu và hành vi mô phỏng. Nút gửi hoàn chỉ hiện thông báo mock; nút báo đổi nhầm chỉ mô phỏng chuyển nhân viên. Prototype không thực hiện giao dịch.
+
+### Chú thích ảnh
+
+Hai ảnh chú thích trong [`prototype/screenshots/`](prototype/screenshots/) minh họa K3 và K5. Các số màu cam trỏ tới nguyên tắc HAX/PAIR và mức tự chủ tương ứng. Có thể mở từng ca bằng hai nút **Demo K3** / **Demo K5** ở đầu trang.
+
+![Ảnh 1 — K3: hỏi lại, thẻ xác nhận và hoàn tác](prototype/screenshots/k3-flow.svg)
+
+![Ảnh 2 — K5: xác nhận hoàn vé](prototype/screenshots/k5-refund.svg)
+
+| Số | Chỗ trên màn hình | Nguyên tắc HAX/PAIR | Mức tự chủ | Vì sao |
+|---|---|---|---|---|
+| **1** | K3: chip vàng “Chưa rõ bạn chọn chuyến nào”; K5: cảnh báo yêu cầu hoàn không rút lại được | **G2 — thể hiện độ chắc**; **G10 — thu hẹp phạm vi khi nghi ngờ** | K3: AI tự tra cứu/giữ chỗ, hỏi khách chọn; chưa đổi. K5: AI tự soạn thông tin, không gửi hoàn | Cho khách thấy điều AI chưa biết và chỗ cần khách quyết; không biến câu “ok”/“huỷ hết” thành lệnh thực thi. |
+| **2** | K3: “chưa đổi”, thẻ chuyến, số chỗ, chỗ đang giữ, lý do khóa BM 217, căn cứ dữ liệu và thẻ xác nhận | **G11 — giải thích và cho thấy căn cứ**; **G10 — thu hẹp phạm vi** | Giữ chỗ: AI tự làm (tự nhả sau 20 phút). Đổi vé: khách duyệt trên thẻ; thêm 2 phút hoàn tác trước khi chốt | Khách nhìn được chuyến nào được giữ, ai sẽ đổi, phí và hệ quả dùng lượt đổi miễn phí trước khi xác nhận. BM 217 bị khóa vì chỉ còn 1 chỗ cho 2 người. |
+| **3** | K5: cảnh báo không rút lại được, thời gian hoàn tiền và lựa chọn đổi miễn phí; màn xác nhận chọn hành khách | **G2 — làm rõ giới hạn/quyền lợi**; **G10 — giới hạn thao tác** | AI tự soạn bản nháp; chỉ chủ tài khoản thao tác gửi trên màn xác nhận | “Huỷ hết” chưa nói rõ hoàn cho ai. Hành khách không tích sẵn; khách phải chọn người và xác nhận đã hiểu hệ quả. |
+| **4** | K3: đồng hồ 2 phút, nút Hoàn tác; sau khi chốt có Báo đổi nhầm/Gặp nhân viên | **G9 — hỗ trợ sửa sai** | Sau khi khách xác nhận, có 2 phút hoàn tác; sau hạn, chuyển nhân viên nếu báo đổi nhầm | Cho khách một đường sửa ngay sau cú bấm; khi đã hết cửa sổ, không tự ý gọi đổi lần hai. |
+
+### Quyết định thiết kế
+
+Nhóm chọn **thẻ lựa chọn có căn cứ + thẻ xác nhận tường minh** cho K3 và **màn xác nhận riêng** do app kiểm soát cho K5. Độ chắc được nói thẳng bằng chip vàng “Chưa rõ bạn chọn chuyến nào”; căn cứ hiện ngay cạnh quyết định gồm mã đặt chỗ, thời điểm số ghế và chính sách. Điều khiển mức tự chủ thể hiện bằng trạng thái cụ thể: “đang giữ — chưa đổi”, chuyến thiếu chỗ bị khóa, khách tự bấm xác nhận đổi, và hoàn vé chỉ gửi qua UI sau khi chủ tài khoản chọn hành khách và tích ô hiểu hệ quả.
+
+Đã cân nhắc (1) câu hỏi xác nhận dạng chat “Bạn chắc chứ?” — loại vì câu “ừ/chắc” vẫn mơ hồ và không cho khách xem lại chuyến/hành khách; (2) AI tự chọn chuyến sớm nhất — loại vì BM 217 chỉ có một chỗ và lựa chọn BM 201 có thể không hợp giờ của gia đình; (3) chuyển mọi ca cho nhân viên — loại vì giữ chỗ có thể tự nhả an toàn, còn chờ tổng đài làm mất chỗ; (4) để AI gọi thẳng API hoàn — loại vì không thể rút yêu cầu và dễ bị lệnh trong chat đánh lừa. Prototype chọn mô phỏng UI và state để trình diễn nhanh; chưa tích hợp dữ liệu trực tiếp, xác thực chủ tài khoản, đồng hồ backend hay API hãng, nên các bảo vệ ở đây mới chứng minh luồng giao diện, chưa chứng minh bảo vệ ở tầng hệ thống.
+
+**Đối chiếu §3–§4:** K3 đi theo đúng thứ tự hỏi/chọn → xem chuyến và hành khách → xác nhận → 2 phút hoàn tác → kết quả và báo nhầm; BM 217 không chọn được. K5 không gửi hoàn tự động; màn xác nhận yêu cầu chọn khách cụ thể và hiểu hệ quả. Mọi thông tin số ghế, giá 0đ, thời gian hoàn, gửi email và chuyển nhân viên đều là mock theo track.
 
 ## §6. Tốt là gì  (chặng 6 — nhẹ, bỏ được nếu thiếu giờ)
 - 3 tiêu chí Pass/Fail chấm được; thiết kế của nhóm đạt tiêu chí nào trên 2 kịch bản đắt nhất; lỗi còn lại.
